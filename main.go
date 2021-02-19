@@ -2,18 +2,17 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"flag"
 	"fmt"
-	"github.com/nwaples/rardecode"
-	"github.com/pkg/profile"
+	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"log"
-	"math"
 	"os"
+	"rearchive/rar"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -21,29 +20,45 @@ var (
 	aPath      string
 	tNum       int
 	pwdDict    string
-	lock       sync.Mutex
-	speedTotal map[int64]int
+	speedTotal uint64
+	lastTotal  uint64
+	startTime  int64
+	memFs afero.Fs
 )
 
 func init() {
 	flag.StringVar(&aPath, "aPath", "test.rar", "this is archive Path")                  //
-	flag.IntVar(&tNum, "tNum", 1, "this is help threads number.")                        //
-	flag.StringVar(&pwdDict, "pwdDict", "000webhost.txt", "this is help password dict.") //
-	speedTotal = make(map[int64]int)
-
+	flag.IntVar(&tNum, "tNum", 10, "this is help threads number.")                        //
+	flag.StringVar(&pwdDict, "pwdDict", "000webhost.txt", "this is help rar dict.") //
+	speedTotal=0;
+	lastTotal=0;
+	startTime=0;
+	memFs = afero.NewMemMapFs()
 }
 
 func main() {
-	defer profile.Start().Stop()
-	log.Printf("rearchive V0.1\r\n")
+	//defer profile.Start().Stop()
+	log.Printf("rearchive V0.2\r\n")
 	flag.Parse()
-
-
 	if aPath == "" || pwdDict == "" {
 		flag.PrintDefaults()
 		return
 	}
-	//read password dict
+
+	//mem file
+	zb,err:=ioutil.ReadFile(aPath)
+	if err != nil {
+		log.Printf("read rar file error! err:%v\r\n",err)
+		return
+	}
+	afero.WriteFile(memFs, aPath,zb, 0644)
+	if err != nil {
+		log.Printf("copy rar file to memfs error! err:%v\r\n",err)
+		return
+	}
+
+
+	//read rar dict
 	lineNum, err := getLineNum(pwdDict)
 	if err != nil {
 		return
@@ -52,83 +67,68 @@ func main() {
 	if lineNum < tNum {
 		tNum = 1
 	}
-	pageSize := int(math.Floor(float64(lineNum / tNum)))
-	for i := 0; i < tNum; i++ {
-		//
-		if i == tNum-1 {
-			go startRePwd(i*pageSize, i*pageSize+pageSize+tNum)
-		} else {
-			go startRePwd(i*pageSize, i*pageSize+pageSize)
-		}
-	}
+	startTime=time.Now().Unix();
 	fmt.Printf("speed:")
-
+	go startRePwd();
 	for {
 		displayTotal()
 		time.Sleep(1 * time.Second)
 	}
 }
 
-/*start re password*/
-func startRePwd(startLine int, endLine int) {
+
+
+
+/*start re rar*/
+func startRePwd() {
 	fi, err := os.Open(pwdDict)
 	if err != nil {
 		return
 	}
 	defer fi.Close()
 	br := bufio.NewReader(fi)
-	zb,err:=ioutil.ReadFile(aPath)
-	zr:=bytes.NewBuffer(zb)
-	var i = 0
+	var wgc sync.WaitGroup
+	passWords := make(chan string, 20)
+	for i := 0; i < tNum; i++ {
+		go consumerPwd(&wgc, passWords)
+		wgc.Add(1)
+	}
 	for {
 		line, _, c := br.ReadLine()
 		if c == io.EOF {
 			break
 		}
-		i++
-		//线程范围
-		if i >= startLine && i <= endLine {
-			    zr.Reset()
-			    zr.Write(zb)
-				ok, err := checkPwd(zr,string(line))
-				if err == nil && ok {
-					log.Printf("password is %s\r\n", string(line))
-					os.Exit(0)
-				}
-
-			//total +1;
-			incrTotal()
-		}
+		passWords <- string(line)
+		atomic.AddUint64(&speedTotal,1)
 	}
+	wgc.Wait()
 	return
 }
 
-func incrTotal() {
-	lock.Lock()
-	tm := time.Now().Unix()
-	if _, ok := speedTotal[tm]; ok {
-		speedTotal[time.Now().Unix()] = speedTotal[time.Now().Unix()] + 1
-	} else {
-		speedTotal[time.Now().Unix()] = 1
+
+func consumerPwd(wg *sync.WaitGroup, passwords <-chan string) {
+	for password := range passwords {
+		//fmt.Printf("rar:%s\r\n",rar)
+		ok,err:=rar.CheckPwd(memFs,aPath,password);
+		if ok &&err==nil {
+			fmt.Printf("\r\nrar is %s runTime:%ds\r\n", password, time.Now().Unix()-startTime)
+			os.Exit(0)
+		}
 	}
-	lock.Unlock()
+	wg.Done()
 }
 
+
+
 func displayTotal() {
-	lock.Lock()
-	tm := time.Now().Unix() - 1
-	if num, ok := speedTotal[tm]; ok {
-		out := strconv.Itoa(num)
-		fmt.Printf(out)
-		for i := 0; i < len(out); i++ {
-			fmt.Printf("\b")
-		}
-		delete(speedTotal, tm) //删除key值为2的map
+	v := atomic.LoadUint64(&speedTotal)
+	num:=v-lastTotal;
+	lastTotal=v;
+	out := strconv.Itoa(int(num))
+	fmt.Printf("%d",num)
+	for i := 0; i < len(out); i++ {
+		fmt.Printf("\b")
 	}
-
-
-
-	lock.Unlock()
 }
 
 /*获取行数*/
@@ -148,44 +148,5 @@ func getLineNum(fname string) (int, error) {
 		i++
 	}
 	return i, nil
-}
-/*sian*/
-func checkPwd(zr io.Reader,password string) (bool, error) {
-	r, err := rardecode.NewReader(zr,password);
-	if err != nil {
-		return false, err
-	}
-	_, err = r.Next()
-	if err != nil  {
-		return false, nil
-	}
-	_, err = ioutil.ReadAll(r)
-	if(err!=nil){
-		return false,nil;
-	}
-	return true, nil
-}
-
-
-
-/*
-check password
-NewReader only supports single volume archives.
-*/
-func checkPwdNew( password string) (bool, error) {
-	//	log.Printf("password:%s len:%d\r\n", password, len(password)
-	r, err := rardecode.OpenReader(aPath, password)
-	if err != nil {
-		return false, err
-	}
-	_, err = r.Next()
-	if err != nil  {
-		return false, nil
-	}
-	_, err = ioutil.ReadAll(r)
-	if(err!=nil){
-		return false,nil;
-	}
-	return true, nil
 }
 
