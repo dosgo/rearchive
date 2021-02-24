@@ -20,10 +20,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d903e9fb-736e-4206-bdab-ae69151f9f4e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/rar/check.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.rar" beforeDir="false" afterPath="$PROJECT_DIR$/test.rar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rar/check.go" beforeDir="false" afterPath="$PROJECT_DIR$/rar/check.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,6 +72,11 @@
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="settings.editor.selected.configurable" value="com.goide.configuration.GoLibrariesConfigurableProvider" />
   </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Go\src\rearchive\hash" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="go build rearchive" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <working_directory value="$PROJECT_DIR$/" />
@@ -106,25 +112,13 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state x="95" y="0" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1572702898008">
-      <screen x="0" y="0" width="1280" height="680" />
+    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1614047206380">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="95" y="0" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1280.680@0.0.1280.680" timestamp="1572702898008" />
-    <state x="357" y="0" key="#go_build_rearchive" timestamp="1572703003800">
-      <screen x="0" y="0" width="1280" height="680" />
+    <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1614047206380" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1614154782216">
+      <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="357" y="0" key="#go_build_rearchive/0.0.1280.680@0.0.1280.680" timestamp="1572703003800" />
-    <state x="375" y="104" key="EnvironmentVariablesDialog" timestamp="1572702992664">
-      <screen x="0" y="0" width="1280" height="680" />
-    </state>
-    <state x="375" y="104" key="EnvironmentVariablesDialog/0.0.1280.680@0.0.1280.680" timestamp="1572702992664" />
-    <state x="421" y="99" key="FileChooserDialogImpl" timestamp="1573898276626">
-      <screen x="0" y="0" width="1280" height="680" />
-    </state>
-    <state x="421" y="99" key="FileChooserDialogImpl/0.0.1280.680@0.0.1280.680" timestamp="1573898276626" />
-    <state x="144" y="0" key="SettingsEditor" timestamp="1572703442885">
-      <screen x="0" y="0" width="1280" height="680" />
-    </state>
-    <state x="144" y="0" key="SettingsEditor/0.0.1280.680@0.0.1280.680" timestamp="1572703442885" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1614154782216" />
   </component>
 </project>

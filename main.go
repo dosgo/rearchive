@@ -9,8 +9,13 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"rearchive/hash"
 	"rearchive/rar"
+	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,7 +24,9 @@ import (
 var (
 	aPath      string
 	tNum       int
+	hashCat    bool;
 	pwdDict    string
+	pwdFormat  string;
 	speedTotal uint64
 	lastTotal  uint64
 	startTime  int64
@@ -27,9 +34,11 @@ var (
 )
 
 func init() {
-	flag.StringVar(&aPath, "aPath", "test.rar", "this is archive Path")                  //
+	flag.StringVar(&aPath, "aPath", "test.rar", "this is archive Path.")                  //
 	flag.IntVar(&tNum, "tNum", 10, "this is help threads number.")                        //
-	flag.StringVar(&pwdDict, "pwdDict", "000webhost.txt", "this is help rar dict.") //
+	flag.StringVar(&pwdDict, "pwdDict", "", "this is help rar dict.") //
+	flag.StringVar(&pwdFormat, "pwdFormat", "?a?a?a?a?a?a?a?a?a?a", "this is hastcat pwd Format.") //
+	flag.BoolVar(&hashCat, "hashCat", true, "use hashCat.") //
 	speedTotal=0;
 	lastTotal=0;
 	startTime=0;
@@ -38,13 +47,138 @@ func init() {
 
 func main() {
 	//defer profile.Start().Stop()
-	log.Printf("rearchive V0.2\r\n")
+	log.Printf("rearchive V0.2-20210224\r\n")
 	flag.Parse()
-	if aPath == "" || pwdDict == "" {
+	if aPath == ""  {
 		flag.PrintDefaults()
 		return
 	}
 
+	//
+	if hashCat {
+		bin:="hashcat.exe"
+		if runtime.GOOS!="windows"{
+			bin="hashcat"
+		}
+		_,err:=exec.LookPath(bin);
+		if err!=nil {
+			fmt.Printf("Cannot find hashcat, please confirm that it is installed and added to the environment variable $path\r\n")
+			return ;
+		}
+		code := hash.Rar2HashFile(aPath)
+		if code!=0{
+			fmt.Printf("get hash error\r\n");
+		}else{
+			var m="";
+			var a="3";
+			var hashStr="";
+			var pass="?d?d?d?d?d?d";
+
+			if len(pwdDict)>0 {
+				a="0";
+				if !filepath.IsAbs(pwdDict) {
+					pass,_=filepath.Abs(pwdDict)
+				}else {
+					pass = pwdDict;
+				}
+			}else{
+				pass=pwdFormat;
+			}
+
+
+			sPos:= strings.Index(hash.Out,":")
+			if sPos==-1 {
+				fmt.Printf("get hash error\r\n");
+				return
+			}
+
+			_hashStr:=hash.Out[sPos+1:];
+			//rar5
+			if strings.HasPrefix(strings.ToLower(_hashStr), "$rar5") {
+				m="13000"
+				hashStr= strings.Replace(_hashStr, "\n", "", -1)
+			}
+			//rar3
+			if  strings.HasPrefix(strings.ToLower(_hashStr), "$rar3"){
+				//rar3-hp
+				if strings.HasPrefix(strings.ToLower(_hashStr), "$rar3$*0*") {
+					ePos := strings.Index(_hashStr, ":");
+					//rar3-hp
+					hashStr= strings.Replace(_hashStr[:ePos], "\n", "", -1)
+					m="12500"
+				}else {
+					ePos := strings.Index(_hashStr, "::");
+					if len(_hashStr[:ePos]) > 100 {
+						m = "23800"
+					} else {
+						m = "23700"
+					}
+					//rar3-p
+					hashStr = strings.Replace(_hashStr[:ePos-2], "\n", "", -1)
+				}
+			}
+			password,err:=hashCatRun(m,a,hashStr,pass)
+			if err!=nil{
+				fmt.Printf("%s",err.Error())
+			}else{
+				fmt.Printf("password:%s\r\n",password)
+			}
+		}
+	}else{
+		rePwd();
+	}
+}
+
+/*exec */
+func hashCatRun(m string,a string,hashStr string,pass string)(string,error){
+	fmt.Printf("\r\n start hashcat ...\r\n");
+	bin:="hashcat.exe"
+	if runtime.GOOS!="windows"{
+		bin="hashcat"
+	}
+	var cmd *exec.Cmd
+	if(a=="3"){
+		incrementMax:=strconv.Itoa(len(pass)/2);
+
+		//--increment --increment-min 1 --increment-max 8
+		cmd= exec.Command(bin, "-m",m,"-a",a,hashStr,"--increment","--increment-min","1","--increment-max",incrementMax,pass)
+
+	}else{
+		//--increment --increment-min 1 --increment-max 8
+		cmd= exec.Command(bin, "-m",m,"-a",a,hashStr,pass)
+	}
+
+
+	fmt.Printf("cmd.args:%v\r\n",cmd.Args)
+	cmd.Dir=filepath.Dir(cmd.Path);
+	stdoutIn, _ := cmd.StdoutPipe()
+	stderrIn, _ := cmd.StderrPipe()
+	cmd.Start()
+	go func() {
+		io.Copy(os.Stdout, stdoutIn)
+	}()
+	go func() {
+		io.Copy(os.Stderr, stderrIn)
+	}()
+
+	err:= cmd.Wait()
+	outStr,_:=os.ReadFile(filepath.ToSlash(cmd.Dir)+"/hashcat.potfile");
+	outs:=strings.Split(string(outStr),"\n");
+
+	for _, _v:= range outs {
+		_pos:=strings.Index(_v,hashStr)
+		if _pos!=-1 {
+			if len(_v)>len(hashStr)+2 {
+				return _v[_pos+len(hashStr)+1:],nil;
+			}
+			return "",err;
+		}
+	}
+	return "",err;
+}
+
+/**/
+func rePwd(){
 	//mem file
 	zb,err:=ioutil.ReadFile(aPath)
 	if err != nil {
@@ -56,7 +190,6 @@ func main() {
 		log.Printf("copy rar file to memfs error! err:%v\r\n",err)
 		return
 	}
-
 
 	//read rar dict
 	lineNum, err := getLineNum(pwdDict)
@@ -149,4 +282,3 @@ func getLineNum(fname string) (int, error) {
 	}
 	return i, nil
 }
-
