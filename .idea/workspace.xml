@@ -21,10 +21,9 @@
   <component name="ChangeListManager">
     <list default="true" id="d903e9fb-736e-4206-bdab-ae69151f9f4e" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hash/rar2hash.go" beforeDir="false" afterPath="$PROJECT_DIR$/hash/rar2hash.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rar/check.go" beforeDir="false" afterPath="$PROJECT_DIR$/rar/check.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rearchive.exe" beforeDir="false" afterPath="$PROJECT_DIR$/rearchive.exe" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -112,13 +111,13 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1614047206380">
+    <state x="740" y="275" key="FileChooserDialogImpl" timestamp="1614315360029">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1614047206380" />
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1614154782216">
+    <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1614315360029" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup" timestamp="1614327196851">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1614154782216" />
+    <state x="623" y="225" width="672" height="678" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1614327196851" />
   </component>
 </project>
